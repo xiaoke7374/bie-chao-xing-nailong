@@ -163,25 +163,30 @@ body {
 }
 
 .catch-overlay {
-  background: rgba(255, 77, 46, 0.22);
+  background: rgba(20, 8, 12, 0.55);
   padding: 0;
   overflow: hidden;
 }
 
 .catch-overlay img {
-  width: 135%;
+  width: 150%;
   max-width: none;
-  animation: scareIn 280ms ease-out both;
+  transform-origin: 50% 35%;
+  animation: scareIn 320ms cubic-bezier(0.12, 0.85, 0.25, 1.15) both;
+  filter: contrast(1.08) saturate(1.1);
 }
 
 @keyframes scareIn {
   from {
-    transform: scale(0.72);
-    filter: brightness(1.35);
+    transform: scale(0.45) translateY(18%);
+    filter: brightness(1.55) contrast(1.2);
+  }
+  55% {
+    transform: scale(1.22) translateY(-2%);
   }
   to {
-    transform: scale(1.12);
-    filter: brightness(1);
+    transform: scale(1.18) translateY(0);
+    filter: brightness(1.05) contrast(1.08);
   }
 }
 

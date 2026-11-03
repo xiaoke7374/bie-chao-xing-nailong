@@ -1,6 +1,14 @@
 import type { FaceStage } from '../core/types'
 import type { SceneSkin } from './types'
 
+type FaceKey = 'sleep' | 'discover' | 'scare'
+
+const FACE_URLS: Record<FaceKey, string> = {
+  sleep: '/assets/nailong-sleep.jpg',
+  discover: '/assets/nailong-discover.jpg',
+  scare: '/assets/nailong-scare.jpg',
+}
+
 export class FridgeSkin implements SceneSkin {
   readonly id = 'fridge' as const
   private face: FaceStage = 'deepSleep'
@@ -8,16 +16,19 @@ export class FridgeSkin implements SceneSkin {
   private acting = false
   private score = 0
   private catchFlash = 0
-  private readonly img: HTMLImageElement
-  private imgReady = false
+  private readonly images = new Map<FaceKey, HTMLImageElement>()
+  private ready = new Set<FaceKey>()
 
-  constructor(imageUrl: string) {
-    this.img = new Image()
-    this.img.decoding = 'async'
-    this.img.onload = () => {
-      this.imgReady = true
+  constructor(_fallbackUrl?: string) {
+    for (const [key, url] of Object.entries(FACE_URLS) as [FaceKey, string][]) {
+      const img = new Image()
+      img.decoding = 'async'
+      img.onload = () => {
+        this.ready.add(key)
+      }
+      img.src = url
+      this.images.set(key, img)
     }
-    this.img.src = imageUrl
   }
 
   setFace(stage: FaceStage, intensity: number): void {
@@ -38,7 +49,6 @@ export class FridgeSkin implements SceneSkin {
   }
 
   draw(ctx: CanvasRenderingContext2D, t: number, w: number, h: number): void {
-    // Night kitchen
     const g = ctx.createLinearGradient(0, 0, 0, h)
     g.addColorStop(0, '#1a2b45')
     g.addColorStop(0.55, '#243a5c')
@@ -47,19 +57,40 @@ export class FridgeSkin implements SceneSkin {
     ctx.fillRect(0, 0, w, h)
 
     if (this.face === 'almostAwake' || this.face === 'lightStir') {
-      ctx.fillStyle = `rgba(255, 176, 32, ${0.08 + this.intensity * 0.18})`
+      ctx.fillStyle = `rgba(255, 176, 32, ${0.08 + this.intensity * 0.22})`
       ctx.fillRect(0, 0, w, h)
     }
 
-    this.drawFridge(ctx, w, h, t)
-    this.drawCharacter(ctx, w, h, t)
-    this.drawLoot(ctx, w, h)
+    // During full catch, canvas stays dim behind DOM scare overlay
+    if (this.face !== 'caught') {
+      this.drawFridge(ctx, w, h, t)
+      this.drawCharacter(ctx, w, h, t)
+      this.drawLoot(ctx, h)
+    } else {
+      this.drawScareCanvas(ctx, w, h, t)
+    }
 
     if (this.catchFlash > 0) {
-      ctx.fillStyle = `rgba(255, 77, 46, ${0.25 * this.catchFlash})`
+      ctx.fillStyle = `rgba(255, 77, 46, ${0.28 * this.catchFlash})`
       ctx.fillRect(0, 0, w, h)
       this.catchFlash = Math.max(0, this.catchFlash - 0.04)
     }
+  }
+
+  private faceKey(): FaceKey {
+    if (this.face === 'caught') return 'scare'
+    if (this.face === 'almostAwake' || this.face === 'lightStir') return 'discover'
+    return 'sleep'
+  }
+
+  private currentImage(): HTMLImageElement | null {
+    const key = this.faceKey()
+    if (!this.ready.has(key)) {
+      // fallback chain
+      if (this.ready.has('sleep')) return this.images.get('sleep') ?? null
+      return null
+    }
+    return this.images.get(key) ?? null
   }
 
   private drawFridge(
@@ -81,12 +112,10 @@ export class FridgeSkin implements SceneSkin {
     ctx.fill()
     ctx.stroke()
 
-    // Interior glow
     ctx.fillStyle = 'rgba(232, 244, 248, 0.85)'
     roundRect(ctx, fx + 10, fy + 12, fw - 20, fh - 24, 8)
     ctx.fill()
 
-    // Door swing when acting
     const open = this.acting ? -0.55 : -0.08 + Math.sin(t * 0.001) * 0.01
     ctx.save()
     ctx.translate(fx, fy)
@@ -99,7 +128,6 @@ export class FridgeSkin implements SceneSkin {
     ctx.restore()
 
     if (this.acting) {
-      // snacks peek
       ctx.fillStyle = '#ff7a59'
       ctx.beginPath()
       ctx.arc(fx + fw * 0.35, fy + fh * 0.4, 10, 0, Math.PI * 2)
@@ -118,25 +146,24 @@ export class FridgeSkin implements SceneSkin {
     h: number,
     t: number,
   ): void {
+    const img = this.currentImage()
     const cw = w * 0.62
     const ch = cw
     let cx = w * 0.08
     let cy = h * 0.32
-
     let rot = -0.08
     let scale = 1
+
     if (this.face === 'deepSleep') {
       cy += 10
       rot = -0.12 + Math.sin(t * 0.002) * 0.02
     } else if (this.face === 'lightStir') {
-      rot = -0.05 + Math.sin(t * 0.02) * 0.04
+      rot = -0.04 + Math.sin(t * 0.02) * 0.05
+      scale = 1.02
     } else if (this.face === 'almostAwake') {
-      rot = Math.sin(t * 0.04) * 0.06
-    } else if (this.face === 'caught') {
-      scale = 1.35
-      cx = w * 0.5 - (cw * scale) / 2
-      cy = h * 0.22
-      rot = 0
+      rot = Math.sin(t * 0.045) * 0.07
+      scale = 1.06 + this.intensity * 0.04
+      cy -= 6
     }
 
     ctx.save()
@@ -145,36 +172,16 @@ export class FridgeSkin implements SceneSkin {
     ctx.scale(scale, scale)
     ctx.translate(-cw / 2, -ch / 2)
 
-    if (this.imgReady) {
-      ctx.drawImage(this.img, 0, 0, cw, ch)
+    if (img) {
+      ctx.drawImage(img, 0, 0, cw, ch)
     } else {
       ctx.fillStyle = '#f5d03a'
       roundRect(ctx, 0, 0, cw, ch, 24)
       ctx.fill()
     }
 
-    // Sleep eyes / stir overlay cues for single-pose asset
-    if (this.face === 'deepSleep' || this.face === 'lightStir') {
-      ctx.fillStyle = 'rgba(20, 35, 58, 0.55)'
-      const eyeY = ch * 0.38
-      ctx.fillRect(cw * 0.28, eyeY, cw * 0.16, ch * 0.035)
-      ctx.fillRect(cw * 0.56, eyeY, cw * 0.16, ch * 0.035)
-    }
-    if (this.face === 'almostAwake') {
-      ctx.strokeStyle = 'rgba(20, 35, 58, 0.8)'
-      ctx.lineWidth = 3
-      ctx.beginPath()
-      ctx.moveTo(cw * 0.28, ch * 0.4)
-      ctx.quadraticCurveTo(cw * 0.36, ch * 0.36, cw * 0.44, ch * 0.4)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(cw * 0.56, ch * 0.4)
-      ctx.quadraticCurveTo(cw * 0.64, ch * 0.36, cw * 0.72, ch * 0.4)
-      ctx.stroke()
-    }
-
     if (this.face === 'deepSleep') {
-      ctx.fillStyle = 'rgba(255,255,255,0.65)'
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'
       ctx.font = `700 ${Math.floor(w * 0.07)}px Fredoka, sans-serif`
       const z = 0.5 + 0.5 * Math.sin(t * 0.003)
       ctx.fillText('z', cw * 0.78, ch * (0.12 - z * 0.04))
@@ -186,7 +193,27 @@ export class FridgeSkin implements SceneSkin {
     ctx.restore()
   }
 
-  private drawLoot(ctx: CanvasRenderingContext2D, _w: number, h: number): void {
+  private drawScareCanvas(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    t: number,
+  ): void {
+    const img = this.images.get('scare')
+    const pulse = 1.08 + Math.sin(t * 0.04) * 0.03
+    const size = Math.max(w, h) * 0.95 * pulse
+    const x = (w - size) / 2
+    const y = (h - size) * 0.35
+
+    ctx.fillStyle = '#1a1020'
+    ctx.fillRect(0, 0, w, h)
+
+    if (img && this.ready.has('scare')) {
+      ctx.drawImage(img, x, y - h * 0.05, size, size)
+    }
+  }
+
+  private drawLoot(ctx: CanvasRenderingContext2D, h: number): void {
     const n = Math.min(8, Math.floor(this.score / 40))
     for (let i = 0; i < n; i++) {
       const x = 18 + (i % 4) * 28

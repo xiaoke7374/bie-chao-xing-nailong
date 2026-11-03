@@ -31,7 +31,7 @@ const warn = new WarnScheduler(config, difficulty)
 const machine = new StateMachine(config, session, score, warn, bus)
 const input = new InputModule()
 const audio = new AudioModule()
-const skin = new FridgeSkin('/assets/nailong.jpeg')
+const skin = new FridgeSkin()
 const render = new RenderModule(canvas, skin)
 const ui = new UIModule(root)
 
