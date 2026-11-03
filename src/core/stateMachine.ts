@@ -2,6 +2,7 @@ import type { GameConfig } from '../config'
 import type { PresentationBus } from '../presentation/bus'
 import type { GameSession } from './session'
 import type { ScoreSystem } from './score'
+import type { StreakSystem } from './streak'
 import type { WarnScheduler } from './warnScheduler'
 import type { GameSnapshot, GameStateId, InputSnapshot } from './types'
 
@@ -13,10 +14,13 @@ export class StateMachine {
   private catchElapsed = 0
   private muted = false
   private lastActing = false
+  private isNewRecord = false
+  private highBeforeCommit = 0
   private readonly config: GameConfig
   private readonly session: GameSession
   private readonly score: ScoreSystem
   private readonly warn: WarnScheduler
+  private readonly streak: StreakSystem
   private readonly bus: PresentationBus
 
   constructor(
@@ -24,12 +28,14 @@ export class StateMachine {
     session: GameSession,
     score: ScoreSystem,
     warn: WarnScheduler,
+    streak: StreakSystem,
     bus: PresentationBus,
   ) {
     this.config = config
     this.session = session
     this.score = score
     this.warn = warn
+    this.streak = streak
     this.bus = bus
   }
 
@@ -46,10 +52,6 @@ export class StateMachine {
   }
 
   update(dtMs: number, input: InputSnapshot): void {
-    if (input.uiAction === 'toggleMute') {
-      // handled by app via storage; ignore here
-    }
-
     if (this.state === 'BOOT' && input.uiAction === 'start') {
       this.beginRun()
       return
@@ -67,12 +69,15 @@ export class StateMachine {
       this.lastActing = input.isActing
 
       if (input.isActing) {
-        const rate =
+        let rate =
           this.state === 'SLEEP'
             ? this.config.safeHoldScoreRate
             : this.inWarnPeak
               ? 0
               : this.config.warnHoldScoreRate
+        if (this.state === 'SLEEP') {
+          rate *= this.streak.scoreMultiplier()
+        }
         if (rate > 0) {
           this.score.add((rate * dtMs) / 1000)
           this.session.score = this.score.current
@@ -105,11 +110,13 @@ export class StateMachine {
       }
 
       if (input.actJustReleased && !w.inPeak) {
-        this.session.peakWarnSurvived += 1
-        this.enter('SLEEP', 'WARN')
-        this.warn.onEnterSleep(this.score.current)
-        this.warnIntensity = 0
-        this.inWarnPeak = false
+        this.surviveWarn(w.intensity)
+        return
+      }
+
+      // Released during peak but still within grace window → survive when warn ends
+      if (input.actJustReleased && w.inPeak && !w.pastGrace) {
+        // stay in WARN until finished; not acting so will survive
         return
       }
 
@@ -118,11 +125,7 @@ export class StateMachine {
           this.triggerCatch()
           return
         }
-        this.session.peakWarnSurvived += 1
-        this.enter('SLEEP', 'WARN')
-        this.warn.onEnterSleep(this.score.current)
-        this.warnIntensity = 0
-        this.inWarnPeak = false
+        this.surviveWarn(w.intensity)
       }
       return
     }
@@ -130,10 +133,13 @@ export class StateMachine {
     if (this.state === 'CATCH') {
       this.catchElapsed += dtMs
       if (this.catchElapsed >= this.config.catchAnimMs) {
+        this.highBeforeCommit = this.score.loadHighScore()
+        const floorScore = Math.floor(this.score.current)
+        this.isNewRecord = floorScore > this.highBeforeCommit
         const high = this.score.commitHighScore()
         this.bus.emit({
           type: 'score:change',
-          score: Math.floor(this.score.current),
+          score: floorScore,
           high,
         })
         this.enter('RESULT', 'CATCH')
@@ -163,17 +169,37 @@ export class StateMachine {
       warnIntensity: this.state === 'WARN' ? this.warnIntensity : 0,
       inWarnPeak: this.state === 'WARN' && this.inWarnPeak,
       muted: this.muted,
+      streak: this.streak.streak,
+      maxStreak: this.streak.maxStreak,
+      isNewRecord: this.state === 'RESULT' && this.isNewRecord,
+      scoreMultiplier: this.streak.scoreMultiplier(),
     }
+  }
+
+  private surviveWarn(intensity: number): void {
+    this.session.peakWarnSurvived += 1
+    this.streak.onDodgeSuccess()
+    this.bus.emit({
+      type: 'dodge:success',
+      intensity,
+      streak: this.streak.streak,
+    })
+    this.enter('SLEEP', 'WARN')
+    this.warn.onEnterSleep(this.score.current)
+    this.warnIntensity = 0
+    this.inWarnPeak = false
   }
 
   private beginRun(): void {
     this.session.reset()
     this.score.reset()
     this.warn.reset()
+    this.streak.resetRun()
     this.warnIntensity = 0
     this.inWarnPeak = false
     this.catchElapsed = 0
     this.lastActing = false
+    this.isNewRecord = false
     this.bus.emit({ type: 'session:reset' })
     this.enter('SLEEP', this.state)
     this.warn.onEnterSleep(0)
@@ -186,6 +212,7 @@ export class StateMachine {
 
   private triggerCatch(): void {
     this.catchElapsed = 0
+    this.streak.onCaught()
     this.bus.emit({ type: 'catch', score: Math.floor(this.score.current) })
     this.enter('CATCH', this.state)
     this.warnIntensity = 1

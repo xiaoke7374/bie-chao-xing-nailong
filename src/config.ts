@@ -12,6 +12,10 @@ export interface GameConfig {
   durationShrinkFactor: number
   enableVibrate: boolean
   defaultMuted: boolean
+  nearMissToastMs: number
+  streakMultiplierThreshold: number
+  streakScoreMultiplier: number
+  enableStreakMultiplier: boolean
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
@@ -28,4 +32,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   durationShrinkFactor: 0.96,
   enableVibrate: true,
   defaultMuted: false,
+  nearMissToastMs: 650,
+  streakMultiplierThreshold: 3,
+  streakScoreMultiplier: 1.2,
+  enableStreakMultiplier: true,
 }

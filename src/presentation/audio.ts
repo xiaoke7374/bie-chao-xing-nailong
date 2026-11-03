@@ -84,7 +84,24 @@ export class AudioModule {
     osc.stop(now + 0.5)
   }
 
-  playUi(_name: 'start' | 'retry' | 'click'): void {
+  playNearMiss(intense: boolean): void {
+    if (!this.ctx || this.muted) return
+    const now = this.ctx.currentTime
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(intense ? 520 : 400, now)
+    osc.frequency.exponentialRampToValueAtTime(intense ? 880 : 640, now + 0.12)
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.09, now + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22)
+    osc.connect(gain)
+    gain.connect(this.ctx.destination)
+    osc.start(now)
+    osc.stop(now + 0.24)
+  }
+
+  playUi(_name: 'start' | 'retry' | 'click' | 'share'): void {
     if (!this.ctx || this.muted) return
     const now = this.ctx.currentTime
     const osc = this.ctx.createOscillator()

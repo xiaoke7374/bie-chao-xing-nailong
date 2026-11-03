@@ -24,9 +24,13 @@
           <div class="hud-score">
             <span id="score">0</span>
             <small>BEST <b id="best">0</b></small>
+            <span class="streak-hud" id="streakHud" hidden>连躲 ×1</span>
+            <span class="mult-hint" id="multHint" hidden>×1.2</span>
           </div>
           <button type="button" class="icon-btn" id="muteBtn" aria-label="静音">♪</button>
         </div>
+
+        <div class="near-miss-toast" id="nearMissToast" hidden>好险！</div>
 
         <button
           type="button"
@@ -51,9 +55,14 @@
 
         <div class="overlay" id="resultOverlay" hidden>
           <p class="result-label">本局</p>
+          <p class="new-record" id="newRecordBadge" hidden>新纪录</p>
           <p class="result-score" id="resultScore">0</p>
           <p class="result-best">最高 <span id="resultBest">0</span></p>
-          <button type="button" class="primary" id="retryBtn">再来一次</button>
+          <p class="result-streak">最高连躲 <span id="resultStreak">0</span></p>
+          <div class="result-actions">
+            <button type="button" class="primary" id="retryBtn">再来一次</button>
+            <button type="button" class="secondary" id="shareBtn">分享成绩</button>
+          </div>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ export interface InputSnapshot {
   isActing: boolean
   actJustPressed: boolean
   actJustReleased: boolean
-  uiAction: null | 'start' | 'retry' | 'toggleMute'
+  uiAction: null | 'start' | 'retry' | 'toggleMute' | 'share'
 }
 
 export interface GameSnapshot {
@@ -22,6 +22,10 @@ export interface GameSnapshot {
   warnIntensity: number
   inWarnPeak: boolean
   muted: boolean
+  streak: number
+  maxStreak: number
+  isNewRecord: boolean
+  scoreMultiplier: number
 }
 
 export type FaceStage = 'deepSleep' | 'lightStir' | 'almostAwake' | 'caught'
@@ -32,3 +36,4 @@ export type GameEvent =
   | { type: 'score:change'; score: number; high: number }
   | { type: 'catch'; score: number }
   | { type: 'session:reset' }
+  | { type: 'dodge:success'; intensity: number; streak: number }

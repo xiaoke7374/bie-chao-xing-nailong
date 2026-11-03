@@ -4,11 +4,13 @@ import { Difficulty } from './core/difficulty'
 import { GameSession } from './core/session'
 import { ScoreSystem } from './core/score'
 import { StateMachine } from './core/stateMachine'
+import { StreakSystem } from './core/streak'
 import { WarnScheduler } from './core/warnScheduler'
 import { InputModule } from './input/input'
 import { AudioModule } from './presentation/audio'
 import { PresentationBus } from './presentation/bus'
 import { RenderModule } from './presentation/render'
+import { ShareCard } from './presentation/shareCard'
 import { UIModule } from './presentation/ui'
 import { FridgeSkin } from './skins/fridgeSkin'
 import { LocalStorageModule } from './storage/storage'
@@ -28,12 +30,14 @@ const session = new GameSession()
 const score = new ScoreSystem(storage)
 const difficulty = new Difficulty(config)
 const warn = new WarnScheduler(config, difficulty)
-const machine = new StateMachine(config, session, score, warn, bus)
+const streak = new StreakSystem(config)
+const machine = new StateMachine(config, session, score, warn, streak, bus)
 const input = new InputModule()
 const audio = new AudioModule()
 const skin = new FridgeSkin()
 const render = new RenderModule(canvas, skin)
 const ui = new UIModule(root)
+const shareCard = new ShareCard()
 
 const muted = storage.getMuted()
 audio.setMuted(muted)
@@ -66,6 +70,18 @@ bus.on('catch', () => {
   audio.stopSleepLoop()
 })
 
+bus.on('dodge:success', (e) => {
+  if (e.type !== 'dodge:success') return
+  const intense = e.intensity >= config.warnPeakRatio
+  const text = intense ? '太险了！' : '好险！'
+  ui.showNearMiss(text, config.nearMissToastMs)
+  audio.playNearMiss(intense)
+  if (config.enableVibrate && navigator.vibrate) navigator.vibrate(intense ? [30, 40, 30] : 25)
+  shell.classList.remove('flash-near-miss')
+  void shell.offsetWidth
+  shell.classList.add('flash-near-miss')
+})
+
 function unlockAudio(): void {
   audio.unlock()
   window.removeEventListener('pointerdown', unlockAudio)
@@ -80,6 +96,30 @@ document.addEventListener('visibilitychange', () => {
   else machine.resumeFromVisibility()
 })
 
+let sharing = false
+
+async function handleShare(): Promise<void> {
+  if (sharing) return
+  const snap = machine.getSnapshot()
+  if (snap.state !== 'RESULT') return
+  sharing = true
+  audio.playUi('share')
+  try {
+    const blob = await shareCard.render({
+      score: snap.score,
+      highScore: snap.highScore,
+      maxStreak: snap.maxStreak,
+      isNewRecord: snap.isNewRecord,
+      characterUrl: '/assets/nailong-sleep.jpg',
+    })
+    await shareCard.shareOrDownload(blob, `nailong-score-${snap.score}.png`)
+  } catch (err) {
+    console.error(err)
+  } finally {
+    sharing = false
+  }
+}
+
 let last = performance.now()
 
 function frame(now: number): void {
@@ -92,6 +132,9 @@ function frame(now: number): void {
     audio.setMuted(next)
     storage.setMuted(next)
     machine.setMuted(next)
+  }
+  if (snapInput.uiAction === 'share') {
+    void handleShare()
   }
 
   machine.update(dt, snapInput)

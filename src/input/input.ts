@@ -29,6 +29,9 @@ export class InputModule {
     root.querySelector('#muteBtn')?.addEventListener('click', () => {
       this.uiAction = 'toggleMute'
     })
+    root.querySelector('#shareBtn')?.addEventListener('click', () => {
+      this.uiAction = 'share'
+    })
   }
 
   consume(): InputSnapshot {
