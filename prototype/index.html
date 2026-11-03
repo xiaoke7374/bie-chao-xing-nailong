@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>别吵醒奶龙 · 产品原型设计图</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./prototype.css" />
+</head>
+<body>
+  <header class="board-header">
+    <div>
+      <p class="board-kicker">产品原型设计图</p>
+      <h1>别吵醒奶龙</h1>
+      <p class="board-desc">竖屏网页小游戏 · 偷冰箱场景 · 角色素材来自 <code>img/nailong.jpeg</code></p>
+    </div>
+    <dl class="token-strip" aria-label="设计 Token">
+      <div><dt>Night</dt><dd style="--sw:#14233A"></dd></div>
+      <div><dt>Fridge</dt><dd style="--sw:#E8F4F8"></dd></div>
+      <div><dt>Nailong</dt><dd style="--sw:#F5D03A"></dd></div>
+      <div><dt>Warn</dt><dd style="--sw:#FFB020"></dd></div>
+      <div><dt>Scare</dt><dd style="--sw:#FF4D2E"></dd></div>
+    </dl>
+  </header>
+
+  <section class="panel" aria-labelledby="flow-title">
+    <div class="panel-head">
+      <h2 id="flow-title">界面流程</h2>
+      <p>BOOT → SLEEP ⇄ WARN → CATCH → RESULT</p>
+    </div>
+    <div class="phone-rail">
+      <figure class="phone">
+        <img src="./screens/01-boot.jpg" alt="BOOT 标题屏：冰箱前的奶龙，开始按钮" />
+        <figcaption><span>01</span>BOOT 标题</figcaption>
+      </figure>
+      <figure class="phone">
+        <img src="./screens/02-sleep.jpg" alt="SLEEP 熟睡安全态：奶龙靠冰箱睡觉，可偷吃" />
+        <figcaption><span>02</span>SLEEP 熟睡</figcaption>
+      </figure>
+      <figure class="phone">
+        <img src="./screens/03-warn.jpg" alt="WARN 微表情预警：眯眼将醒" />
+        <figcaption><span>03</span>WARN 预警</figcaption>
+      </figure>
+      <figure class="phone">
+        <img src="./screens/04-catch.jpg" alt="CATCH 被抓惊吓：面部特写大笑扑镜" />
+        <figcaption><span>04</span>CATCH 惊吓</figcaption>
+      </figure>
+      <figure class="phone">
+        <img src="./screens/05-result.jpg" alt="RESULT 结算：分数与再来一次" />
+        <figcaption><span>05</span>RESULT 结算</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="panel interactive" aria-labelledby="live-title">
+    <div class="panel-head">
+      <h2 id="live-title">可点状态原型</h2>
+      <p>用真实角色图模拟状态切换 · 按住下方热区体验「偷吃」反馈</p>
+    </div>
+
+    <div class="live-layout">
+      <nav class="state-nav" aria-label="状态切换">
+        <button type="button" data-state="BOOT" class="is-active">BOOT</button>
+        <button type="button" data-state="SLEEP">SLEEP</button>
+        <button type="button" data-state="WARN">WARN</button>
+        <button type="button" data-state="CATCH">CATCH</button>
+        <button type="button" data-state="RESULT">RESULT</button>
+      </nav>
+
+      <div class="device" id="device" data-state="BOOT">
+        <div class="device-screen">
+          <div class="hud">
+            <div class="hud-score">
+              <span id="scoreLabel">128</span>
+              <small>BEST <b id="bestLabel">320</b></small>
+            </div>
+            <button type="button" class="mute" id="muteBtn" aria-label="静音">♪</button>
+          </div>
+
+          <div class="stage">
+            <div class="fridge" aria-hidden="true">
+              <div class="fridge-glow"></div>
+              <div class="fridge-door"></div>
+              <div class="snacks"></div>
+            </div>
+            <div class="char-wrap">
+              <img class="char" src="../img/nailong.jpeg" alt="奶龙角色" id="char" />
+              <div class="zzz" aria-hidden="true">z</div>
+              <div class="zzz z2" aria-hidden="true">z</div>
+            </div>
+          </div>
+
+          <div class="act-zone" id="actZone" role="button" tabindex="0" aria-label="按住偷吃">
+            <span class="act-hint" id="actHint">按住偷吃</span>
+          </div>
+
+          <div class="overlay boot-overlay">
+            <h3>别吵醒奶龙</h3>
+            <img class="boot-char" src="../img/nailong.jpeg" alt="" />
+            <button type="button" class="primary" id="startBtn">开始</button>
+          </div>
+
+          <div class="overlay catch-flash" aria-hidden="true">
+            <img src="../img/nailong.jpeg" alt="被抓了" />
+          </div>
+
+          <div class="overlay result-overlay">
+            <p class="result-score" id="resultScore">256</p>
+            <p class="result-best">最高 <span id="resultBest">320</span></p>
+            <button type="button" class="primary" id="retryBtn">再来一次</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="annot">
+        <h3>当前态说明</h3>
+        <p id="annotText">标题屏。角色为主视觉，点「开始」进入熟睡局。</p>
+        <ul>
+          <li>主色：夜厨海军蓝 + 奶龙黄</li>
+          <li>操作：按住 = 行动，松开 = 停</li>
+          <li>惊吓：角色原图大笑扑脸</li>
+          <li>零长文案，靠表情传达</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <footer class="board-footer">
+    <a href="../docs/原型设计说明.md">原型设计说明</a>
+    <span>·</span>
+    <a href="../docs/功能模块设计-别吵醒奶龙.md">功能模块设计</a>
+  </footer>
+
+  <script src="./prototype.js"></script>
+</body>
+</html>
