@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:gh": "node scripts/deploy-gh-pages.mjs"
   },
   "devDependencies": {
     "typescript": "~5.9.3",
