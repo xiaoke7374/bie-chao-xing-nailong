@@ -1,0 +1,29 @@
+---
+description: 人机协作：下单方式、Skill 选用、冲突优先级与交付节奏
+alwaysApply: true
+---
+
+# AI 协作规范（别吵醒奶龙）
+
+详情见 `docs/AI协作规范.md`。
+
+## Skill 选用
+
+| 任务 | Skill |
+| --- | --- |
+| 玩法 / 状态机 / Canvas | 不用 Taste 全流程；跟模块设计 |
+| HUD / 结算 / 配色字体 | 先读并遵循 `frontend-design` |
+| 宣传落地页 / 营销页 | 完整 `design-taste-frontend` |
+| 「太 AI / 太模板」 | frontend-design；整页营销再上 Taste |
+
+## 执行
+
+1. 小步可运行交付；不擅自换栈、不做账号/后端
+2. 改判定须说明；调手感优先改 config
+3. 冲突优先级：当句指令 > `.cursor/rules` > `docs/*` > Skills > 模型默认
+4. 阶段结束 git commit；默认不 push
+5. IP：无授权不用官方奶龙商用素材
+
+## 对人回复
+
+先给结论；附验收方式；不灌无关长代码。

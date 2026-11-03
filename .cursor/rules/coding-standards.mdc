@@ -1,0 +1,35 @@
+---
+description: Vite+TS+Canvas 小游戏代码规范：模块边界、配置外置、壳层反模板
+alwaysApply: true
+---
+
+# 代码规范（别吵醒奶龙）
+
+详情见 `docs/代码规范.md`。实现时遵守：
+
+## 栈
+
+- Vite + TypeScript（strict）+ Canvas 2D + HTML/CSS HUD
+- 未经用户同意不引入 React / Vue / Phaser / Tailwind
+
+## 边界
+
+- `src/core/*`：无 DOM、无 Audio
+- 表现层只读 `GameSnapshot` / 事件，不改分数与状态
+- 手感数字只放 `config.ts`
+
+## 循环顺序
+
+`input` → `stateMachine.update` → `render/ui`；切后台必须 `PAUSE`；`dt` 钳制。
+
+## UI 壳
+
+- 先定 4–6 色 token 与字体，再写 CSS
+- 禁止无 brief 的紫渐变、三卡片、奶油+陶土默认套餐
+- 操作区 `touch-action: none`；文案极少、按钮说清动作
+
+## 质量
+
+- 禁止无必要 `any`
+- 音效须手势 unlock；静音不改判定
+- 交付后按仓库规则 git commit
