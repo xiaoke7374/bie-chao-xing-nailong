@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#14233A" />
+    <title>别吵醒奶龙</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./assets/index-D-EtUU-j.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CRPpgES4.css">
+  </head>
+  <body>
+    <div id="app">
+      <div class="game-shell">
+        <canvas id="game" width="390" height="700" aria-label="游戏画面"></canvas>
+
+        <div class="hud" id="hud" hidden>
+          <div class="hud-score">
+            <span id="score">0</span>
+            <small>BEST <b id="best">0</b></small>
+            <span class="streak-hud" id="streakHud" hidden>连躲 ×1</span>
+            <span class="mult-hint" id="multHint" hidden>×1.2</span>
+          </div>
+          <button type="button" class="icon-btn" id="muteBtn" aria-label="静音">♪</button>
+        </div>
+
+        <div class="near-miss-toast" id="nearMissToast" hidden>好险！</div>
+
+        <button
+          type="button"
+          class="act-zone"
+          id="actZone"
+          hidden
+          aria-label="按住偷吃"
+        >
+          <span id="actHint">按住偷吃</span>
+        </button>
+
+        <div class="overlay" id="bootOverlay">
+          <h1>别吵醒奶龙</h1>
+          <img class="boot-art" src="./assets/nailong-sleep.jpg" alt="睡着的奶龙" />
+          <p class="boot-tip">趁他睡着，偷偷打开冰箱</p>
+          <button type="button" class="primary" id="startBtn">开始</button>
+        </div>
+
+        <div class="overlay catch-overlay" id="catchOverlay" hidden>
+          <img id="catchArt" src="./assets/nailong-scare.jpg" alt="被抓了" />
+        </div>
+
+        <div class="overlay" id="resultOverlay" hidden>
+          <p class="result-label">本局</p>
+          <p class="new-record" id="newRecordBadge" hidden>新纪录</p>
+          <p class="result-score" id="resultScore">0</p>
+          <p class="result-best">最高 <span id="resultBest">0</span></p>
+          <p class="result-streak">最高连躲 <span id="resultStreak">0</span></p>
+          <div class="result-actions">
+            <button type="button" class="primary" id="retryBtn">再来一次</button>
+            <button type="button" class="secondary" id="shareBtn">分享成绩</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
