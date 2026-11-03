@@ -1,4 +1,5 @@
 import './style.css'
+import { assetUrl } from './assets'
 import { DEFAULT_CONFIG } from './config'
 import { Difficulty } from './core/difficulty'
 import { GameSession } from './core/session'
@@ -110,7 +111,7 @@ async function handleShare(): Promise<void> {
       highScore: snap.highScore,
       maxStreak: snap.maxStreak,
       isNewRecord: snap.isNewRecord,
-      characterUrl: '/assets/nailong-sleep.jpg',
+      characterUrl: assetUrl('assets/nailong-sleep.jpg'),
     })
     await shareCard.shareOrDownload(blob, `nailong-score-${snap.score}.png`)
   } catch (err) {

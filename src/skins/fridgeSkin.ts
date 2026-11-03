@@ -1,12 +1,13 @@
+import { assetUrl } from '../assets'
 import type { FaceStage } from '../core/types'
 import type { SceneSkin } from './types'
 
 type FaceKey = 'sleep' | 'discover' | 'scare'
 
 const FACE_URLS: Record<FaceKey, string> = {
-  sleep: '/assets/nailong-sleep.jpg',
-  discover: '/assets/nailong-discover.jpg',
-  scare: '/assets/nailong-scare.jpg',
+  sleep: assetUrl('assets/nailong-sleep.jpg'),
+  discover: assetUrl('assets/nailong-discover.jpg'),
+  scare: assetUrl('assets/nailong-scare.jpg'),
 }
 
 export class FridgeSkin implements SceneSkin {

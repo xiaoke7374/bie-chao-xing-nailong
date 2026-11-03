@@ -91,6 +91,10 @@ body {
   font-size: 0.85rem;
 }
 
+.streak-hud[hidden] {
+  display: none !important;
+}
+
 .mult-hint {
   display: inline-block;
   margin-left: 0.35rem;
@@ -99,6 +103,10 @@ body {
   font-family: var(--font-display);
   font-size: 0.9rem;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+
+.mult-hint[hidden] {
+  display: none !important;
 }
 
 .near-miss-toast {
